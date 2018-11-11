@@ -1,5 +1,4 @@
-module gEMD
-using Distributed
+
 function mirror!(A::Array,d::Int=3)
     w = div(d-1,2) #width of window, d is an ODD integer
     prepend!(A,zeros(w))
@@ -55,8 +54,8 @@ function midpoints(s)
     midpts = exts[2:end] .-div.(diff(exts),2)
     # extvals = diff(extvals)./2
 
-    # pushfirst!(midpts,1)
-    # push!(midpts,length(s))
+    pushfirst!(midpts,1)
+    push!(midpts,length(s))
 
     return convert(Array{Int64},midpts)
 end
@@ -121,6 +120,4 @@ function moving_average(A,d::Int=3)
         ret[n+1] = (cs[n+d] - cs[n]) * invd
     end
     return ret
-end
-
 end
