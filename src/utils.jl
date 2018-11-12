@@ -1,14 +1,14 @@
-
 function mirror!(A::Array,d::Int=3)
     w = div(d-1,2) #width of window, d is an ODD integer
     prepend!(A,zeros(w))
     append!(A,zeros(w))
-    A[1:w] = reverse(A[w+2:2w+1])
-    A[end-w+1:end] = reverse(A[end-2w:end-w-1])
+
+    @views A[1:w] = reverse(A[w+2:2w+1])
+    @views A[end-w+1:end] = reverse(A[end-2w:end-w-1])
     return nothing
 end
 
-function mirror(A::Array,d::Int=3)
+function mirror(A::AbstractArray,d::Int=3)
     mir = copy(A)
     w = div(d-1,2) #width of window, d is an ODD integer
     prepend!(mir,zeros(w))
@@ -23,11 +23,12 @@ function find_extrema_count(A::Array,d::Int=3)
     mA = mirror(A)
     for i in 1:lastindex(mA)-2
         win = view(mA,i:i+2)
-        if (win[2] > win[1] && win[2] > win[3]) || (win[2] < win[1] && win[2] < win[3])
-                count+=1
+
+        @views if (win[2] > win[1] && win[2] > win[3]) || (win[2] < win[1] && win[2] < win[3])
+                count += 1
         end
     end
-    count
+    return count
 end
 
 function find_extrema(A::Array,d::Int=3)
@@ -60,13 +61,12 @@ function midpoints(s)
     return convert(Array{Int64},midpts)
 end
 
-function stream_minmax(a,d::Int64)
+function stream_minmax(env1, env2, a, d::Int64)
     a = mirror(a,d)
     N = length(a)
-    env1 = zeros(N-d+1)
-    env2 = zeros(N-d+1)
     upper = Int[] #buffer for indices
     lower = Int[]
+
     push!(upper,1)
     push!(lower,1)
     w = d
@@ -97,27 +97,25 @@ function stream_minmax(a,d::Int64)
         end
         push!(upper,i)
         push!(lower,i)
-
         if i == w + upper[1]
             popfirst!(upper)
         elseif i == w + lower[1]
             popfirst!(lower)
         end
-        # env1[N-w+1] = mir[upper[1]]
-        # env2[N-w+1] = mir[lower[1]]
     end
-    return env1, env2
+    return nothing
 end
 
-function moving_average(A,d::Int=3)
-    mirror!(A,d)
-    T = typeof(one(Float64)/1)
+function moving_average(A, d::Int=3)
+    A = mirror(A,d)
+    T = typeof(one(eltype(A))/1)
     ret = Vector{T}(undef, length(A) - d + 1)
-    invd = inv(d)
-    cs = cumsum(A)
-    ret[1] = cs[d] * invd
-    for n = 1:length(ret)-1
-        ret[n+1] = (cs[n+d] - cs[n]) * invd
+    id = 1 / d
+    s = sum(view(A, 1:d))
+    ret[1] = s * id
+    @inbounds for n = 1:length(ret)-1
+        s += A[n+d] - A[n]
+        ret[n+1] = s * id
     end
     return ret
 end

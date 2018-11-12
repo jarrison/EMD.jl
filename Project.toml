@@ -1,8 +1,9 @@
-authors = ["jarrison <jarrison@uw.edu>"]
 name = "sEMD"
 uuid = "42d0e380-e5fe-11e8-187a-5baec286574c"
+authors = ["jarrison <jarrison@uw.edu>"]
 version = "0.1.0"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
