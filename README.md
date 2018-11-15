@@ -1,6 +1,11 @@
 # sEMD.jl
 Empirical Mode Decomposition in Julia
 # Usage
+Install this way.
+```julia
+Pkg.add("https://github.com/jarrison/sEMD.jl")
+```
+
 Set-up a signal to be decomposed using the EMD.
 ```julia
 julia> using sEMD, Plots
