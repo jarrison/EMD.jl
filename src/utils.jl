@@ -1,72 +1,44 @@
-function mirror!(A::Array,d::Int=3)
+function mirror(A,d::Int=3)
     w = div(d-1,2) #width of window, d is an ODD integer
-    prepend!(A,zeros(w))
-    append!(A,zeros(w))
-
-    @views A[1:w] = reverse(A[w+2:2w+1])
-    @views A[end-w+1:end] = reverse(A[end-2w:end-w-1])
-    return nothing
-end
-
-function mirror(A::AbstractArray,d::Int=3)
-    mir = copy(A)
-    w = div(d-1,2) #width of window, d is an ODD integer
-    prepend!(mir,zeros(w))
-    append!(mir,zeros(w))
-    mir[1:w] = reverse(mir[w+2:2w+1])
-    mir[end-w+1:end] = reverse(mir[end-2w:end-w-1])
-    return mir
-end
-
-function find_extrema_count(A::Array,d::Int=3)
-    count = 0
-    mA = mirror(A)
-    for i in 1:lastindex(mA)-2
-        win = view(mA,i:i+2)
-
-        @views if (win[2] > win[1] && win[2] > win[3]) || (win[2] < win[1] && win[2] < win[3])
-                count += 1
-        end
-    end
-    return count
+    mA = [A[(w+1):-1:2];A;A[lastindex(A)-1:-1:(length(A)-w)]]
 end
 
 function find_extrema(A::Array,d::Int=3)
-    count = 0
     mA = mirror(A)
+    count = 0
+    maxs = Int[]
+    mins = Int[]
     exts = Int[]
-
     for i in 1:lastindex(mA)-d+1
         win = view(mA,i:i+d-1)
         if (win[2] > win[1] && win[2] > win[3])
                 count+=1
+                push!(maxs,i)
                 push!(exts,i)
         elseif (win[2] < win[1] && win[2] < win[3])
                 count+=1
+                push!(mins,i)
                 push!(exts,i)
         end
     end
-    count, exts
+    maxs, mins,exts
 end
 
-function midpoints(s)
-    nex, exts = find_extrema(s)
-    # @views extvals = s[exts]
-    midpts = exts[2:end] .-div.(diff(exts),2)
-    # extvals = diff(extvals)./2
-
-    pushfirst!(midpts,1)
-    push!(midpts,length(s))
-
-    return convert(Array{Int64},midpts)
+function find_extrema_count(A::Array,d::Int=3)
+    dd = diff(sign.(diff(A)))
+    return length(dd[dd .!= 0]) + 2
 end
 
-function stream_minmax(env1, env2, a, d::Int64)
-    a = mirror(a,d)
+function find_extrema_minmax(A::Array,d::Int=3)
+    dd = diff(sign.(diff(A)))
+    return findall(dd .< 0), findall(dd .> 0)
+end
+
+function stream_minmax(env1, env2, A, d::Int)
+    a = mirror(A, d)
     N = length(a)
-    upper = Int[] #buffer for indices
-    lower = Int[]
-
+    upper = UInt32[] #buffer for indices
+    lower = UInt32[]
     push!(upper,1)
     push!(lower,1)
     w = d
@@ -102,6 +74,8 @@ function stream_minmax(env1, env2, a, d::Int64)
         elseif i == w + lower[1]
             popfirst!(lower)
         end
+        env1[end-w] = a[upper[1]]
+        env2[end-w] = a[lower[1]]
     end
     return nothing
 end
