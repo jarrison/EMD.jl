@@ -1,6 +1,6 @@
 module sEMD
 
-export sfEMD, bEMD
+export sfEMD
 include("sfemd.jl")
 
 end
