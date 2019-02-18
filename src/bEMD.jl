@@ -1,7 +1,3 @@
-module bEMD
-using Dierckx, ElasticArrays
-include("utils.jl")
-
 function midpoints(s,t)
     maxs, mins, exts = find_extrema(s)
     mpx = Float64[]
@@ -10,46 +6,39 @@ function midpoints(s,t)
         push!(mpx, (t[exts[i]] + t[exts[i+1]]) /2.0)
         push!(mpy, (s[exts[i]] + s[exts[i+1]]) /2.0)
     end
+
     mpx,mpy
 end
 
-function get_spline(s,t)
+function get_spline(s,t,sparam)
     mpt, mps = midpoints(s,t)
-    spl = Spline1D(mpt,mps,bc="extrapolate")
+    spl = Spline1D(mpt,mps,bc="extrapolate",s=sparam)
     return spl(t)
 end
 
-function get_spline_env(s,t)
-    maxs, mins, = find_extrema(s)
-    max_env = Spline1D(t[maxs],s[maxs])
-    min_env = Spline1D(t[mins],s[mins])
-    return (1/2)*(max_env(t)+min_env(t))
-end
-
-function bsift(s,t)
-    h = ElasticArray{Float64}(undef,length(s),0)
-    append!(h,s)
+function bsift(s,t;sparam=0.0)
     count = 1
     sd = 1.0
+    hlast = copy(s)
+    hnew = copy(s)
     while sd > 0.25
-        count > 5 && break
-        spls = get_spline(h[:,end],t)
-        append!(h, h[:,end]-spls)
-        sd = sum(abs2.(h[:,end-1]-h[:,end]))/sum(h[:,end-1].^2)
+        spls = get_spline(hlast,t,sparam)
+        @. hnew = hlast - spls
+        sd = sum(abs2.(hlast-hnew))/sum(hlast.^2)
+        @. hlast = hnew
         count +=1
     end
-    return h[:,end]
+    return hnew
 end
 
-function bEMD(s,t;maximfs=5)
+function bEMD(s,t;maximfs=5,sparam=0.0)
     sig = copy(s)
     N=length(s)
     imfs = ElasticArray{Float64}(undef,N,0)
     for i in 1:maximfs
-        h = bsift(sig,t)
+        h = bsift(sig,t;sparam=sparam)
         append!(imfs, h)
-        sig -= h
+        sig .-= h
     end
     return imfs
-end
 end
