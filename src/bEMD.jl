@@ -40,5 +40,5 @@ function bEMD(s,t;maximfs=5,sparam=0.0)
         append!(imfs, h)
         sig .-= h
     end
-    return imfs
+    return convert(Array,imfs)
 end

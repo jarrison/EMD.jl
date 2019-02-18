@@ -19,7 +19,7 @@ function sift!(Eav, decomp, d_osf, nsifts=5)
     return nothing
 end
 
-function sEMD(signal;maximfs=10,nsifts=5)
+function sEMD(signal;maximfs=10,nsifts=2)
     N = length(signal)
     a_new = copy(signal)
     imfs = ElasticArray{Float64}(undef,N,0)
@@ -38,5 +38,5 @@ function sEMD(signal;maximfs=10,nsifts=5)
         append!(imfs, a_new)
         a_new .= Eav
     end
-        return imfs
+        return convert(Array,imfs)
 end
