@@ -1,27 +1,27 @@
-# sEMD.jl
+# EMD.jl
 Empirical Mode Decomposition in Julia
 # Usage
 Install this way.
 ```julia
-Pkg.add("https://github.com/jarrison/sEMD.jl")
+Pkg.add("https://github.com/jarrison/EMD.jl")
 ```
 
 Set-up a signal to be decomposed using the EMD.
 ```julia
-julia> using sEMD, Plots
+julia> using EMD, Plots
 julia> t = LinRange(0,1.0,10^3)
 julia> s = 3*sin.(2π*8*t) + sin.(2π*4*t)
 ```
 
 Apply the decomposition with default values.
 ```julia
-julia> imfs = sfEMD(s)
+julia> imfs = sEMD(s)
 julia> plot(imfs)
 ```
 
 Typically we want fewer IMFs, the number of sifts will greatly affect the orthogonality of the resulting IMFs.
 ```julia
-julia> imfs = sfEMD(s,maximfs=5, nsifts=2)
+julia> imfs = sEMD(s,maximfs=5, nsifts=2)
 julia> plot(imfs)
 ```
 # References
