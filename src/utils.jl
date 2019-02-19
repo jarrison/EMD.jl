@@ -5,23 +5,21 @@ end
 
 function find_extrema(A::Array,d::Int=3)
     mA = mirror(A)
-    count = 0
     maxs = Int[]
     mins = Int[]
     exts = Int[]
     for i in 1:lastindex(mA)-d+1
         win = view(mA,i:i+d-1)
         if (win[2] > win[1] && win[2] > win[3])
-                count+=1
                 push!(maxs,i)
                 push!(exts,i)
-        elseif (win[2] < win[1] && win[2] < win[3])
-                count+=1
+        end
+        if (win[2] < win[1] && win[2] < win[3])
                 push!(mins,i)
                 push!(exts,i)
         end
     end
-    maxs, mins,exts
+    maxs, mins, exts
 end
 
 function find_extrema_count(A::Array,d::Int=3)
