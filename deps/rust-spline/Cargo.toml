@@ -1,0 +1,14 @@
+[package]
+name = "rustspline"
+version = "0.1.0"
+authors = ["jarrison"]
+edition = "2018"
+[lib]
+crate-type = ["cdylib"]
+lib-name = "rustspline"
+[dependencies]
+splines = {version="0.2.3"}
+libc = "0.2.51"
+bspline = "0.2"
+[build-dependencies]
+cbindgen = "0.8.3"
