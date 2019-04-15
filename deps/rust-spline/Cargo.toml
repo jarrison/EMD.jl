@@ -10,5 +10,6 @@ lib-name = "rustspline"
 splines = {version="0.2.3"}
 libc = "0.2.51"
 bspline = "0.2"
+peroxide = "0.9"
 [build-dependencies]
 cbindgen = "0.8.3"

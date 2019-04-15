@@ -1,9 +1,11 @@
 use libc::{c_float, size_t, c_double};
 use splines::{Interpolation, Key, Spline};
 use bspline;
+use std::mem;
 use std::slice;
 use std::vec::Vec;
-
+use peroxide::numerical::spline;
+use peroxide::Polynomial;
 pub struct Bspline {
     spline: Spline<f32>,
 }
@@ -57,6 +59,24 @@ pub struct BSpline {
     spline: bspline::BSpline<f32>,
 }
 
+#[repr(C)]
+pub struct Tuple {
+    x:c_float,
+    y:c_float,
+}
+// Conversion functions
+impl From<(f32, f32)> for Tuple {
+    fn from(tup: (f32, f32)) -> Tuple {
+        Tuple { x: tup.0, y: tup.1 }
+    }
+}
+
+impl From<Tuple> for (f32, f32) {
+    fn from(tup: Tuple) -> (f32, f32) {
+        (tup.x, tup.y)
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn new_bspline(points:*const c_float,knots:*const c_float,lpts:size_t,lkts:size_t) -> *mut BSpline
 {
@@ -70,8 +90,57 @@ pub extern "C" fn new_bspline(points:*const c_float,knots:*const c_float,lpts:si
 }
 
 #[no_mangle]
-pub extern fn knot_domain(spline:*mut BSpline) -> *const c_float
+pub extern fn knot_domain(spline:*mut BSpline) -> Tuple
 {
     let _spline = unsafe{ &mut *spline};
-    _spline.into_raw()
+    _spline.spline.knot_domain().into()
 }
+#[no_mangle]
+pub extern fn sample(spline:*mut BSpline,t:c_float) -> c_float
+{
+    let _spline = unsafe{ &mut *spline};
+    _spline.spline.point(t)
+}
+
+pub struct pBSpline
+{
+    spline:Vec<Polynomial>,
+}
+
+#[no_mangle]
+pub extern "C" fn new_bspline_peroxide(x:*const c_double,y:*const c_double,lpts:size_t,lkts:size_t) -> *mut pBSpline
+{
+    let _x = unsafe { slice::from_raw_parts(x, lpts as usize)};
+    let _y = unsafe { slice::from_raw_parts(y, lkts as usize)};
+    let vx = Vec::from(_x);
+    let vy = Vec::from(_y);
+    let spline = spline::cubic_spline(vx, vy);
+    let npolynomials = spline.len() as usize;
+    Box::into_raw(Box::new(pBSpline{spline}))
+}
+
+#[no_mangle]
+pub extern fn eval_poly(spline:*mut pBSpline,outp:*mut f64,lout:size_t,t:c_double)
+{
+    let _spline = unsafe{ &mut *spline};
+    let pvec = &_spline.spline;
+
+    let mut retv:[f64;100] = [0.0;100];
+
+    for (i,p) in _spline.spline.iter().enumerate()
+    {
+
+        retv[i]=p.eval(t);
+        println!("{}",retv[i]);
+    }
+    unsafe {
+    std::slice::from_raw_parts_mut(outp, lout)
+        .copy_from_slice(&retv);
+    }
+}
+// #[no_mangle]
+// pub extern fn sample(spline:*mut BSpline,t:c_float) -> c_float
+// {
+//     let _spline = unsafe{ &mut *spline};
+//     _spline.spline.point(t)
+// }
